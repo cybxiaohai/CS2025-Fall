@@ -3,16 +3,22 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <!-- 页面宽度自适应，初始缩放比例为1.0，响应式设计的基础 -->
     <title>CS2025-Fall 学习日志</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            /* 字体，-apple-system 是苹果系统自带字体，BlinkMacSystemFont 是Safari浏览器内置字体，Segoe UI 是微软Windows系统的默认字体，Helvetica 是Mac OS X的默认字体，Arial 是Windows系统的默认字体，sans-serif 是通用衬线字体族，用于提供后备字体选择 */
+
+            /* 最大宽度为800px，用于限制页面宽度，避免内容过于宽泛 */
             max-width: 800px;
-            margin: 40px auto;
+            /* 外边距为40px，自动居中，上下边距为40px，左右边距为自动，用于控制页面内容与边界的距离 */
             padding: 20px;
+            /* 内边距为20px，用于控制页面内容与边界的距离 */
             line-height: 1.6;
+            /* 行高为1.6，用于控制行间距 */
             color: #333;
+            /* 颜色为#333，深灰色 */
         }
 
         h1 {
@@ -23,37 +29,41 @@
             background: #f5f5f5;
             padding: 10px;
             border-radius: 5px;
+            /* 圆角为5px，用于控制边框的圆角 */
         }
 
         footer {
             margin-top: 50px;
+            /* 上边距为50px，用于控制页面内容与边界的距离 */
             color: #777;
             font-size: 0.9em;
+            /* 字体大小为0.9em，用于控制字体大小 */
         }
     </style>
 </head>
 
-<body>
+<body> <!-- 页面主体 -->
     <h1>📘 CS2025-Fall 学习记录</h1>
-    <p><em>课程笔记 · 编程实践 · 持续更新</em></p>
+    <p><em>课程笔记 · 编程实践 · 持续更新</em></p> <!-- 段落，<em> 标签用于强调文本，使文本呈现斜体效果 -->
 
-    <div id="content">加载中...</div>
+    <div id="content">加载中...</div> <!-- 用于存储加载中的内容 -->
 
-    <footer>
-        Powered by GitHub Pages | © 2025 cybxiaohai
+    <footer> <!-- 页脚 -->
+        Powered by GitHub Pages | © 2025 cybxiaohai <!-- 版权信息 -->
     </footer>
 
     <!-- 使用 marked.js 渲染 Markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> <!-- 使用marked.js渲染Markdown
+        轻量级Markdown解析库，使用CDN加速 -->
     <script>
-        fetch('学习日志.md')
-            .then(r => r.text())
+        fetch('学习日志.md') // fetch函数用于获取学习日志.md文件
+            .then(r => r.text()) // 把获取到的文件内容转换为文本
             .then(text => {
                 document.getElementById('content').innerHTML = marked.parse(text);
-            })
+            }) // 把获取到的文件内容转换为HTML
             .catch(err => {
                 document.getElementById('content').innerHTML = '<p>❌ 无法加载 学习日志.md，请检查文件是否存在。</p>';
-            });
+            }); // 如果获取文件失败，则显示错误信息
     </script>
 </body>
 
