@@ -1,0 +1,30 @@
+# .github/workflows/update-log.yml
+name: Update Learning Log
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # 每周一 00:00 UTC（北京时间 周一 8:00）
+  workflow_dispatch:      # 允许手动触发
+
+jobs:
+  update-log:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository #检出仓库
+        uses: actions/checkout@v4
+
+      #添加一行新日志，时间格式为YYYY-MM-DD HH:MM 
+      - name: Generate new log entry #生成日志条目
+        run: | 
+          echo "## $(date '+%Y-%m-%d')" >> docs/学习日志.md
+          echo "- $(date '+%Y-%m-%d %H:%M'): 本周学习继续中..." >> docs/学习日志.md
+          echo "" >> docs/学习日志.md
+      
+
+      - name: Commit and push changes #提交更改
+        run: |
+          git config --global user.name "cybxiaohai"
+          git config --global user.email "icec41311@gmail.com"
+          git add docs/学习日志.md
+          git commit -m "📝 自动更新学习日志 $(date '+%Y-%m-%d')" || echo "无更改"
+          git push origin main

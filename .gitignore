@@ -1,0 +1,8 @@
+
+# 忽略所有 PDF（可选）
+*.pdf
+
+# 忽略临时文件
+__pycache__/
+*.log
+.DS_Store

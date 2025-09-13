@@ -1,0 +1,22 @@
+
+# 1. 自身文件保持 LF 换行符，不被转换
+.gitattributes eol=lf
+
+# 2. 明确设置文本文件的换行符行为
+* text=auto eol=lf
+
+# 3. 避免二进制文件被 Git 当作文本处理（防止警告和损坏）
+*.drawio binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.pdf binary
+*.zip binary
+*.exe binary
+*.dll binary
+*.dat binary
+
+# 4. Windows 脚本或批处理保持 CRLF（可选）
+*.bat eol=crlf
+*.cmd eol=crlf
