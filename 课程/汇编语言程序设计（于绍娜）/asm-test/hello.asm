@@ -7,7 +7,7 @@ extern WriteConsoleA
 
 section .data
     msg db 'Hello,World!',10,0  ; 输出字符串，10 是换行符;  0 是字符串结束符
-    masg_len equ $ - msg -1        ; 计算字符串长度 (不包括结束符)
+    msg_len equ $ - msg -1        ; 计算字符串长度 (不包括结束符)
 
 section .bss
     written resd 1               ; 用于存储写入的字符数 
