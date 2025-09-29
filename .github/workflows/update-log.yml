@@ -12,6 +12,9 @@ jobs:
     steps:
       - name: Checkout repository #检出仓库
         uses: actions/checkout@v4
+        with:
+          # 允许提交变更
+          token: ${{ secrets.ACCESS_TOKEN }}
 
       #添加一行新日志，时间格式为YYYY-MM-DD HH:MM 
       - name: Generate new log entry #生成日志条目
@@ -26,5 +29,11 @@ jobs:
           git config --global user.name "cybxiaohai"
           git config --global user.email "icec41311@gmail.com"
           git add docs/学习日志.md
-          git commit -m "📝 自动更新学习日志 $(date '+%Y-%m-%d')" || echo "无更改"
-          git push origin main
+          # 提交（避免空提交）
+          if git diff-index --quiet HEAD -- ; then
+            echo "没有变更，跳过提交"
+          else
+            git commit -m "📝 自动更新学习日志 $(date '+%Y-%m-%d')"
+            git push "https://cybxiaohai:${{ secrets.ACCESS_TOKEN }}@github.com/cybxiaohai/CS2025-Fall.git" HEAD:main
+          fi
+          
