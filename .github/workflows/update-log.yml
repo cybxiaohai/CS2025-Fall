@@ -39,8 +39,6 @@ jobs:
         id: prepare
         run: |
           
-          TZ='Asia/Shanghai'
-          export TZ
 
           #获取当前UTC时间并转换为北京时间
           DATE=$(date "+%Y-%m-%d")
