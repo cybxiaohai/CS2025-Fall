@@ -21,7 +21,7 @@ jobs:
       - name: 设置Git用户信息
         run: |
           git config --global user.name "cybxiaohai"
-          git config --global user.email "icec41311@gmail.com"- name: 检出仓库
+          git config --global user.email "icec41311@gmail.com"
       
 
       - name: 配置SSH密钥
