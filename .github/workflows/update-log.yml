@@ -18,33 +18,36 @@ jobs:
     runs-on: ubuntu-latest # 使用最新的Ubuntu环境
 
     steps:
-      - name: 检出仓库
-        uses: actions/checkout@v4
-        with:
-          # 允许提交变更
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: 设置Git用户信息
+        run: |
+          git config --global user.name "cybxiaohai"
+          git config --global user.email "icec41311@gmail.com"- name: 检出仓库
+      
 
       - name: 配置SSH密钥
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.ACCESS_TOKEN }}
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan github.com >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        
 
+      - name: 克隆仓库
+        run: |
+          git clone git@github.com:cybxiaohai/CS2025-Fall.git
+          git checkout main
       #添加一行新日志，时间格式为YYYY-MM-DD HH:MM
       - name: 准备日志内容
         id: prepare
         run: |
-          set -euo pipefail
-          TZ='Asia/Shanghai'
-          export TZ
+          
 
           #获取当前UTC时间并转换为北京时间
-          DATE=$(date "+%Y-%m-%d")
-          DATETIME=$(date "+%Y-%m-%d %H:%M")
+          DATE=$(TZ='Asia/Shanghai' date "+%Y-%m-%d")
+          DATETIME=$(TZ='Asia/Shanghai' date "+%Y-%m-%d %H:%M")
 
           #获取输入的消息
           MESSAGE="${{ inputs.message }}"
@@ -68,6 +71,9 @@ jobs:
             # 直接写入新条目（首次）
             echo "## $DATE" >> "$LOG_FILE"
             echo "- $DATETIME: $MESSAGE" >> "$LOG_FILE"
+            git add "$LOG_FILE"
+            git commit -m "初始化学习日志: $MESSAGE ($DATETIME)"
+            git push origin HEAD:main
             exit 0
           fi
 
@@ -79,23 +85,16 @@ jobs:
           # 读取原文件，按行处理
           while IFS= read -r line || [ -n "$line" ]; do
             # 检测标题行（日期格式）
-          if [[ $line =~ ^##[[:space:]]*[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            if [[ $line =~ ^##[[:space:]]*[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
               # 提取标题中的日期
               HEADER_DATE=$(echo "$line" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}')
               
               if [[ "$HEADER_DATE" == "$DATE" ]]; then
                 # 同一天：输出标题 + 新条目
                 echo "$line" >> "$TEMP_FILE"
-                echo "$DATETIME: $MESSAGE" >> "$TEMP_FILE"
+                echo "- $DATETIME: $MESSAGE" >> "$TEMP_FILE"
                 INSERTED=true
-                # 跳过后续同组条目（防止重复）
-                while IFS= read -r next_line && [[ "$next_line" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}: ]]; do
-                  echo "$next_line" >> "$TEMP_FILE"
-                done
-                # 输出中断的行（非条目行）
-                if [ -n "$next_line" ]; then
-                  echo "$next_line" >> "$TEMP_FILE"
-                fi
+                
                 continue
               elif [[ "$HEADER_DATE" < "$DATE" ]] && [[ "$INSERTED" == "false" ]]; then
                 # 新日期应插在此前（倒序）
@@ -122,19 +121,16 @@ jobs:
           # 替换原文件
           mv "$TEMP_FILE" "$LOG_FILE"
           
-      - name: 提交更改
-        run: |
-          git config --global user.name "cybxiaohai"
-          git config --global user.email "icec41311@gmail.com"
-          git add "$LOG_FILE"
+      
+          
+          
           # 提交（避免空提交）
           if git diff-index --quiet HEAD -- ; then
             echo "没有变更，跳过提交"
             exit 0
           fi
 
-          
-          git commit -m "自动更新学习日志: ${{ inputs.message }}($DATETIME)"
-          git remote set-url origin git@github.com/cybxiaohai/CS2025-Fall.git
+          git add "$LOG_FILE"
+          git commit -m "自动更新学习日志: $MESSAGE($DATETIME)"
           git push origin HEAD:main
           
