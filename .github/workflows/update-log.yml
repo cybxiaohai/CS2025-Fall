@@ -106,6 +106,6 @@ jobs:
             echo "没有变更，跳过提交"
           else
             git commit -m "📝 自动更新学习日志: ${{ inputs.message }}"
-            git remote set-url origin "https://cybxiaohai:${{ secrets.ACCESS_TOKEN }}@github.com/cybxiaohai/CS2025-Fall.git"
+            git remote set-url origin git@github.com/cybxiaohai/CS2025-Fall.git"
             git push origin HEAD:main
           fi
