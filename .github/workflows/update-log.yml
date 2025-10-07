@@ -38,7 +38,7 @@ jobs:
       - name: 准备日志内容
         id: prepare
         run: |
-          set -euo pipefail
+          
           TZ='Asia/Shanghai'
           export TZ
 
