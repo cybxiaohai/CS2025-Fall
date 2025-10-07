@@ -3,37 +3,109 @@ name: Update Learning Log
 
 on:
   schedule:
-    - cron: '0 0 * * 1'  # 每周一 00:00 UTC（北京时间 周一 8:00）
-  workflow_dispatch:      # 允许手动触发
+    - cron: "0 0 * * 1" # 每周一 00:00 UTC（北京时间 周一 8:00）
+  workflow_dispatch: # 允许手动触发
+    inputs:
+      message:
+        description: "自定义日志内容" # 输入框描述
+        required: false
+        default: "本周学习继续中..."
 
 jobs:
   update-log:
-    runs-on: ubuntu-latest
+    name: 生成并更新学习日志
+    runs-on: ubuntu-latest # 使用最新的Ubuntu环境
+
     steps:
-      - name: Checkout repository #检出仓库
+      - name: 检出仓库
         uses: actions/checkout@v4
         with:
           # 允许提交变更
           token: ${{ secrets.ACCESS_TOKEN }}
 
-      #添加一行新日志，时间格式为YYYY-MM-DD HH:MM 
-      - name: Generate new log entry #生成日志条目
-        run: | 
-          echo "## $(date '+%Y-%m-%d')" >> docs/学习日志.md
-          echo "- $(date '+%Y-%m-%d %H:%M'): 本周学习继续中..." >> docs/学习日志.md
-          echo "" >> docs/学习日志.md
-      
+      #添加一行新日志，时间格式为YYYY-MM-DD HH:MM
+      - name: 准备日志内容
+        id: prepare
+        run: |
+          #获取当前UTC时间并转换为北京时间
+          DATE=$(date "+%Y-%m-%d")
+          DATETIME=$(date "+%Y-%m-%d %H:%M")
 
-      - name: Commit and push changes #提交更改
+          #获取输入的消息
+          MESSAGE="${{ inputs.message }}"
+          if [ -z "$MESSAGE" ]; then
+            MESSAGE="本周学习继续中..."
+          fi
+
+          LOG_FILE="docs/学习日志.md"
+
+          # 如果日志文件不存在，创建初始结构
+          if [ ! -f "$LOG_FILE" ]; then
+            mkdir -p "$(dirname "$LOG_FILE")"
+            cat > "$LOG_FILE"
+          fi
+
+          # 创建临时文件用于处理
+          TEMP_FILE=$(mktemp)
+
+          #标记是否已插入新条目
+          IEMP_FILE=false
+
+          # 读取原文件，按行处理
+          while IFS= read -r line || [ -n "$line" ]; do
+            # 检测标题行（日期格式）
+          if [[ $line =~ ^##[[:space:]]+[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+              # 提取标题中的日期
+              HEADER_DATE=$(echo "$line" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}')
+              
+              if [[ "$HEADER_DATE" == "$DATE" ]]; then
+                # 同一天：输出标题 + 新条目
+                echo "$line" >> "$TEMP_FILE"
+                echo "- $DATETIME: $MESSAGE" >> "$TEMP_FILE"
+                INSERTED=true
+                # 跳过后续同组条目（防止重复）
+                while IFS= read -r next_line && [[ "$next_line" =~ ^- ]]; do
+                  echo "$next_line" >> "$TEMP_FILE"
+                done
+                # 输出中断的行（非条目行）
+                if [ -n "$next_line" ]; then
+                  echo "$next_line" >> "$TEMP_FILE"
+                fi
+                continue
+              elif [[ "$HEADER_DATE" < "$DATE" ]] && [[ "$INSERTED" == "false" ]]; then
+                # 新日期应插在此前（倒序）
+                echo "## $DATE" >> "$TEMP_FILE"
+                echo "- $DATETIME: $MESSAGE" >> "$TEMP_FILE"
+                echo "" >> "$TEMP_FILE"
+                INSERTED=true
+              fi
+            fi
+            # 默认：原样输出
+            echo "$line" >> "$TEMP_FILE"
+          done < "$LOG_FILE"
+
+          # 如果从未插入，且文件非空
+          if [[ "$INSERTED" == "false" ]]; then
+            echo "" >> "$TEMP_FILE"
+            echo "## $DATE" >> "$TEMP_FILE"
+            echo "- $DATETIME: $MESSAGE" >> "$TEMP_FILE"
+          fi
+
+          # 替换原文件
+          mv "$TEMP_FILE" "$LOG_FILE"
+          # 添加新日志条目
+          echo -e "\n## $DATE\n\n- [$DATETIME] $MESSAGE" >> "$LOG_ENTRY"
+
+      - name: 提交更改
         run: |
           git config --global user.name "cybxiaohai"
           git config --global user.email "icec41311@gmail.com"
-          git add docs/学习日志.md
+          git add "$GITHUB_WORKSPACE/docs/学习日志.md"
           # 提交（避免空提交）
           if git diff-index --quiet HEAD -- ; then
             echo "没有变更，跳过提交"
           else
-            git commit -m "📝 自动更新学习日志 $(date '+%Y-%m-%d')"
-            git push "https://cybxiaohai:${{ secrets.ACCESS_TOKEN }}@github.com/cybxiaohai/CS2025-Fall.git" HEAD:main
+            git commit -m "📝 自动更新学习日志: ${{ inputs.message }}"
+            git remote set-url origin "https://cybxiaohai:${{ secrets.ACCESS_TOKEN }}@github.com/cybxiaohai/CS2025-Fall.git"
+            git push origin HEAD:main
           fi
-          
