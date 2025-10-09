@@ -7,11 +7,6 @@ on:
     branches:
       - main
   workflow_dispatch: # 允许手动触发
-    inputs:
-      message:
-        description: "自定义日志内容" # 输入框描述
-        required: false
-        default: "本周学习继续中..."
 
 jobs:
   update-log:
@@ -65,15 +60,14 @@ jobs:
           DATETIME=$(TZ='Asia/Shanghai' date "+%Y-%m-%d %H:%M")
 
           #获取输入的消息
-          MESSAGE="${{ inputs.message }}"
-          MESSAGE=$(echo "$MESSAGE" | tr -d '\n\r' | cut -c1-200) # 限制长度为200字符
-          LOG_FILE="docs/学习日志.md"
-
-          #如果没有提供消息，使用默认消息
+          MESSAGE=$(git log --oneline -1 --pretty=format:%s)
           if [ -z "$MESSAGE" ]; then
-                      MESSAGE="本周学习继续中..."
+            MESSAGE="本周学习继续中..."
+          else
+            MESSAGE=$(echo "$MESSAGE" | tr -d '\n\r' | cut -c1-200) # 限制长度为200字符
           fi
 
+          LOG_FILE="docs/学习日志.md"
           # 确保日志文件目录存在
           mkdir -p "$(dirname "$LOG_FILE")"
 
