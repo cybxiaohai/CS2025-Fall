@@ -22,7 +22,8 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN}}
+          token: ${{ secrets.REPOPAT}}
+          persist-credentials: true # 保持凭据以便后续推送
       - name: 设置Git用户信息
         run: |
           git config --global user.name "cybxiaohai"
