@@ -1,10 +1,11 @@
 # .github/workflows/update-log.yml
 name: Update Learning Log
-
-
 on:
   schedule:
     - cron: "0 0 * * 1" # 北京时间 周一 8:00）
+  push:
+    branches:
+      - main
   workflow_dispatch: # 允许手动触发
     inputs:
       message:
@@ -22,18 +23,31 @@ jobs:
         run: |
           git config --global user.name "cybxiaohai"
           git config --global user.email "icec41311@gmail.com"
-      
 
       - name: 配置SSH密钥
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.ACCESS_TOKEN }}
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-        
+
+          #重试3次获取github.com的SSH
+          for i in {1..3}; do
+            echo "获取github.com的SSH密钥，尝试第 $i 次"
+            if ssh-keyscan -t rsa ,ecdsa,ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null; then
+              echo "成功获取github.com的SSH密钥"
+              chmod 644 ~/.ssh/known_hosts
+              break
+            elif [ $i -eq 3 ]; then
+              echo "获取github.com的SSH密钥失败，达到最大重试次数，退出
+              exit 1
+            else
+              echo "获取失败，等待3秒后重试..."
+              sleep 3
+            fi
+          done
+
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: 克隆仓库
         run: |
@@ -43,7 +57,7 @@ jobs:
       - name: 准备日志内容
         id: prepare
         run: |
-          
+
 
           #获取当前UTC时间并转换为北京时间
           DATE=$(TZ='Asia/Shanghai' date "+%Y-%m-%d")
@@ -120,10 +134,10 @@ jobs:
           fi
           # 替换原文件
           mv "$TEMP_FILE" "$LOG_FILE"
-          
-      
-          
-          
+
+
+
+
           # 提交（避免空提交）
           if git diff-index --quiet HEAD -- ; then
             echo "没有变更，跳过提交"
@@ -131,6 +145,6 @@ jobs:
           fi
 
           git add "$LOG_FILE"
-          git commit -m "自动更新学习日志: $MESSAGE($DATETIME)"
+          COMMIT_MSG="自动更新学习日志: $(printf '%q' "$MESSAGE")($DATETIME)"
+          git commit -m "$COMMIT_MSG"
           git push origin HEAD:main
-          
