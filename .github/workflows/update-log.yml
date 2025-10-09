@@ -63,9 +63,12 @@ jobs:
           DATETIME=$(TZ='Asia/Shanghai' date "+%Y-%m-%d %H:%M")
 
           #获取输入的消息
-          MESSAGE=$(git log --oneline -1 --pretty=format:%s)
+          MESSAGE=$(git log --oneline -1 --pretty=format:%s) # 获取最新提交信息作为默认消息
           if [ -z "$MESSAGE" ]; then
-            MESSAGE="本周学习继续中..."
+            MESSAGE="${{inputs.message}}"
+            if [ -z "$MESSAGE" ]; then
+              MESSAGE="本周学习继续中..."
+            fi
           else
             MESSAGE=$(echo "$MESSAGE" | tr -d '\n\r' | cut -c1-200) # 限制长度为200字符
           fi
