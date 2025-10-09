@@ -15,6 +15,7 @@ on:
 
 jobs:
   update-log:
+    if: github.actor != 'github-actions[bot]' # 避免自触发
     name: 生成并更新学习日志
     runs-on: ubuntu-latest # 使用最新的Ubuntu环境
 
@@ -134,17 +135,39 @@ jobs:
           fi
           # 替换原文件
           mv "$TEMP_FILE" "$LOG_FILE"
+      - name: 生成网页
+        run: |
+          set -euo pipefail
+          LOG_CONTENT=$(cat docs/学习日志.md | sed 's/"/\\"/g' | tr '\n' ' ')
+          cat > index.html <<'HTML'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>CS2025-Fall 学习日志</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+          </head>
+          <body>
+            <h1>CS2025-Fall 学习记录</h1>
+            <pre>$LOG_CONTENT</pre>
+            <p><small>最后更新: $(date "+%Y-%m-%d %H:%M") (北京时间)</small></p>
+            <p><small>Powered by GitHub Actions</small></p>
+          </body>
+          </html>
+          HTML
+                          
 
 
-
-
+      - name: 提交并推送更改
+        run: |
+          
           # 提交（避免空提交）
           if git diff-index --quiet HEAD -- ; then
             echo "没有变更，跳过提交"
             exit 0
           fi
 
-          git add "$LOG_FILE"
+          git add docs/学习日志.md index.html
           COMMIT_MSG="自动更新学习日志: $(printf '%q' "$MESSAGE")($DATETIME)"
           git commit -m "$COMMIT_MSG"
           git push origin HEAD:main
