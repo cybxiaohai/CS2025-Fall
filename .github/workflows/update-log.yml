@@ -31,14 +31,14 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
 
           #重试3次获取github.com的SSH
-          for i in {1..3}; do
+          for i in 1 2 3; do
             echo "获取github.com的SSH密钥，尝试第 $i 次"
             if ssh-keyscan -t rsa ,ecdsa,ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null; then
               echo "成功获取github.com的SSH密钥"
               chmod 644 ~/.ssh/known_hosts
               break
             elif [ $i -eq 3 ]; then
-              echo "获取github.com的SSH密钥失败，达到最大重试次数，退出
+              echo "获取github.com的SSH密钥失败，达到最大重试次数，退出"
               exit 1
             else
               echo "获取失败，等待3秒后重试..."
