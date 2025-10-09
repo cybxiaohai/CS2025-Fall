@@ -3,10 +3,13 @@ name: Update Learning Log
 on:
   schedule:
     - cron: "0 0 * * 1" # 北京时间 周一 8:00）
-  push:
-    branches:
-      - main
+ 
   workflow_dispatch: # 允许手动触发
+      inputs:
+        message:
+          description: '日志内容（可选）'
+          required: false
+          default: '本周学习继续中...'
 
 jobs:
   update-log:
