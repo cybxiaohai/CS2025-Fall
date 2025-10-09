@@ -49,11 +49,7 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: 克隆仓库
-        run: |
-          git clone git@github.com:cybxiaohai/CS2025-Fall.git
-          git checkout main
-      #添加一行新日志，时间格式为YYYY-MM-DD HH:MM
+            
       - name: 准备日志内容
         id: prepare
         run: |
